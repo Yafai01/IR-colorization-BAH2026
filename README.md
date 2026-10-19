@@ -23,8 +23,16 @@ On the USGS Earth Explorer site, all Landsat 9 bands (B2, B3, B4, and B10) are r
 
 To get started, you will need Landsat 9 imagery.
 
-### Quick Start (Demo Data)
-Use the provided bash script to download sample bands into `input/demo_product/`:
+### Setup
+Requires Python 3.8+. Install the dependencies used by the scripts:
+```bash
+pip install numpy opencv-python tifffile pillow
+# Only needed for downloading data via Google Earth Engine:
+pip install earthengine-api geemap
+```
+
+### Quick Start (Google Earth Engine)
+`scripts/download_data.sh` is a wrapper around `scripts/download.py`. Before you run it, edit `PRODUCT_ID`, the date range, and `EE_PROJECT_ID` (the defaults are placeholders) and authenticate with Earth Engine (`earthengine authenticate`). Bands are saved to `input/<PRODUCT_ID>_product/`:
 ```bash
 chmod +x scripts/download_data.sh
 ./scripts/download_data.sh
@@ -74,8 +82,8 @@ python driver.py
    - **Data Flow**: For the Super-Resolution task, the TIR band is downsampled to 200m as input, with the objective of recovering a 100m output.
 3. **Extract Co-registered Patches**:
    - **SR Pair**: 256x256 (200m TIR) $\rightarrow$ 512x512 (100m TIR).
-   - **Colorization Pair**: 256x256 (100m TIR) $\rightarrow$ 256x256 (100m RGB).
-4. **Save Output**: Both `.npy` (for training) and `.png` (for verification) files are saved in `output/patches/`.
+   - **Colorization Pair**: 512x512 (100m TIR) $\rightarrow$ 512x512 (100m RGB).
+4. **Save Output**: Both `.npy` (for training) and `.png` (for verification) files are saved in `output/patches/`. An example sample is included in `output/patches/demo/sample_006/`.
    - ⚠️ **Important**: Do **not** train your models on the `.png` files. `.png` files are intended for visualization purposes only. For training, use the `.npy` files to maintain the original radiometric resolution of the data.
 
 ### Technical Alignment
@@ -142,3 +150,19 @@ For the colorized TIR images, the output TIFF must adhere to the following chann
 2. **Model Weights**: Your trained model weights (e.g., `.pth`, `.h5`).
 3. **Technical Report**: A PDF detailing your approach and results.
 4. **Sample Results**: A sequence of Raw TIR $\rightarrow$ Super-Resolved TIR $\rightarrow$ Colorized TIR.
+
+---
+
+## Repository Structure
+
+```
+driver.py                 Runs the full dataset-generation pipeline over input/*
+scripts/
+  download.py             Landsat 9 band download via Google Earth Engine + geemap
+  download_data.sh        Example wrapper for download.py
+  merge_rgb.py            Merges B4/B3/B2 into an RGB GeoTIFF
+  downscale.py            Downscales a raster by a given factor
+  create_patches.py       Extracts co-registered 200m/100m TIR and RGB patches
+utils/                    File lookup, logging, and visualization helpers
+output/patches/demo/      Example generated patch (.npy + .png)
+```

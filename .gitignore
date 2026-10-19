@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+input/
+output/*
+!output/patches/
+output/patches/*
+!output/patches/demo/
